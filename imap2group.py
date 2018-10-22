@@ -61,6 +61,7 @@ def upload_folder(log, service, args, folder):
         print_countdown -= 1
         if print_countdown == 0:
             log.info("... uploaded %d of %d endicia in %s (errors = %d)" % (success_count, total_count, folder.name, failure_count))
+            print_countdown = args.print_after
 
     log.info('... folder "%s" completed: out of %d messages, %d succeeded and %d failed' % (folder.name, total_count, success_count, failure_count))
 
