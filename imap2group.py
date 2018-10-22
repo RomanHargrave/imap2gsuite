@@ -40,19 +40,19 @@ def upload_folder(log, service, args, folder):
 
     failure_count   = 0
     success_count   = 0
-    total_count     = len(folder.endicia)
+    total_count     = len(folder.mailpieces)
     print_countdown = args.print_after
 
-    log.info('Uploading folder "%s", with %d endicia' % (folder.name, total_count))
+    log.info('Uploading folder "%s", with %d mailpieces' % (folder.name, total_count))
 
-    for message in folder.endicia:
+    for message in folder.mailpieces:
         try:
             strio = io.BytesIO(message.r822)
             media = apiclient.http.MediaIoBaseUpload(strio, mimetype='message/rfc822')
             time.sleep(1.0 / args.rate_limit)
             result = archive.insert(groupId=args.group, media_body=media).execute()
             assert result['responseCode'].lower() == 'success'
-            log.debug('Uploaded indicia #%d' % (message.id))
+            log.debug('Uploaded mailpieces #%d' % (message.id))
 
         except Exception as ex:
             log.exception('Failed to upload message with IMAP ID %d in folder "%s"; subject "%s"' % (message.id, folder.name, message.subject))
@@ -60,7 +60,7 @@ def upload_folder(log, service, args, folder):
 
         print_countdown -= 1
         if print_countdown == 0:
-            log.info("... uploaded %d of %d endicia in %s (errors = %d)" % (success_count, total_count, folder.name, failure_count))
+            log.info("... uploaded %d of %d mailpieces in %s (errors = %d)" % (success_count, total_count, folder.name, failure_count))
             print_countdown = args.print_after
 
     log.info('... folder "%s" completed: out of %d messages, %d succeeded and %d failed' % (folder.name, total_count, success_count, failure_count))
@@ -73,7 +73,7 @@ def main():
     parser.add_argument('group',            help='Google Group Address')
     parser.add_argument('--verbose',        dest='verbose', action='store_true', help='Detailed (read: trace level) logging')
     parser.add_argument('--ssl',            dest='use_ssl', action='store_true', help='Use SSL (Requires Valid Cert)')
-    parser.add_argument('--report',         dest='print_after', type=int, default=100, help='Print status every N endicia (per folder)')
+    parser.add_argument('--report',         dest='print_after', type=int, default=100, help='Print status every N mailpieces (per folder)')
     parser.add_argument('--rate',           dest='rate_limit', type=int, default=10, help='API Rate Limit')
     parser.add_argument('--cid',            dest='client_secret_file', default='client_secret.json')
     parser.add_argument('--cred-store',     dest='credential_file', default=os.path.join(os.path.expanduser('~'), '.google', 'imap2group.json'))

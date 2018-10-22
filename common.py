@@ -21,8 +21,8 @@ class KeepAliveWorker(Thread):
             # rather than using signaling.
             pass
 
-# Message; holds a single endicia id and retrieves contents when asked
-class Endicia:
+# Message; holds a single mailpieces id and retrieves contents when asked
+class Mailpiece:
     def __init__(self, client, message_id):
         self.client     = client
         self.message_id = message_id
@@ -53,21 +53,21 @@ class Endicia:
 
         return self._r822
 
-# Folder; holds a list of endicia ids, sorted in ascending order
+# Folder; holds a list of mailpieces ids, sorted in ascending order
 class Folder:
     def __init__(self, client, name, criteria = u'ALL'):
         self.client   = client
         self.name     = name
         self.criteria = criteria
-        self._endicia = None
+        self._mailpieces = None
 
     @property
-    def endicia(self):
-        if self._endicia is None:
+    def mailpieces(self):
+        if self._mailpieces is None:
             self.client.select_folder(self.name)
-            self._endicia = sorted(map((lambda num: Endicia(self.client, num)), self.client.search(self.criteria)), key=lambda x: x.id)
+            self._mailpieces = sorted(map((lambda num: Mailpiece(self.client, num)), self.client.search(self.criteria)), key=lambda x: x.id)
 
-        return self._endicia
+        return self._mailpieces
 
 # Account; holds a list of folder names
 class Connection:
