@@ -16,6 +16,8 @@ import apiclient
 import httplib2
 import oauth2client
 
+import imaplib
+
 SCOPES = [ 'https://www.googleapis.com/auth/apps.groups.migration' ]
 
 def connect_service(args):
@@ -77,6 +79,7 @@ def main():
     parser.add_argument('--rate',           dest='rate_limit', type=int, default=10, help='API Rate Limit')
     parser.add_argument('--cid',            dest='client_secret_file', default='client_secret.json')
     parser.add_argument('--cred-store',     dest='credential_file', default=os.path.join(os.path.expanduser('~'), '.google', 'imap2group.json'))
+    parser.add_argument('--imaplib-maxline',dest='maxline', default=25000, help='Value to set imaplib._MAXLINE to')
 
     logging.basicConfig(format = '[%(asctime)s %(name)s %(levelname)s] %(message)s')
 
@@ -92,6 +95,8 @@ def main():
 
     for folder in connection.folders:
         upload_folder(log, service, args, folder)
+
+    imaplib._MAXLINE = maxline
 
 if __name__ == "__main__":
     main()
