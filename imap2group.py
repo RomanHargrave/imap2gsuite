@@ -55,6 +55,7 @@ def upload_folder(log, service, args, folder):
             result = archive.insert(groupId=args.group, media_body=media).execute()
             assert result['responseCode'].lower() == 'success'
             log.debug('Uploaded mailpieces #%d' % (message.id))
+            success_count += 1
 
         except Exception as ex:
             log.exception('Failed to upload message with IMAP ID %d in folder "%s"; subject "%s"' % (message.id, folder.name, message.subject))
