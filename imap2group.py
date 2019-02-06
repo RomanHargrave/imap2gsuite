@@ -76,32 +76,34 @@ class MailProcessor(threading.Thread):
             try:
                 (message, attempts) = self.mailq.get(block=True,timeout=2);
 
-                self.log.info('Processing mailpiece %d, attempt number %d' % (message.id, attempts))
+                self.log.debug('Processing mailpiece %d, attempt number %d' % (message.id, attempts + 1))
 
                 strio = io.BytesIO(message.r822)
                 media = apiclient.http.MediaIoBaseUpload(strio, mimetype='message/rfc822')
                 time.sleep(1.0 / self.args.rate_limit)
                 result = arch.insert(groupId=self.args.group, media_body=media).execute()
                 assert result['responseCode'].lower() == 'success'
-                self.log.debug('Uploaded mailpiece %d after %d attempts' % (message.id, attempts))
+
+                self.log.info('Uploaded mailpiece %d after %d attempts; subject=%s' % (message.id, attempts + 1, message.subject))
+
                 self._success_count += 1
 
             except queue.Empty as qex:
+                self.log.debug('Queue miss')
                 continue
 
             except Exception as ex:
                 subject = "(error)"
                 try:
                     subject = message.subject
-
-                except Exception as qex:
+                except:
                     pass
 
                 if attempts < self.args.retries:
                     self.log.debug('Message upload failed for message ID %d; re-enqueueing' % (message.id))
                     self.mailq.put((message, attempts + 1))
                 else:
-                    self.log.exception('Failed to upload message %d after %d attempts; subject=%s' % (message.id, attempts, subject))
+                    self.log.exception('Failed to upload message %d after %d attempts; subject=%s' % (message.id, attempts + 1, subject))
                     self._failure_count += 1
 
             self.mailq.task_done()
@@ -138,6 +140,8 @@ def main():
 
     if (args.verbose):
         log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
 
     connection   = Connection(args.server, args.username, args.password, ssl = args.use_ssl, verify_ssl = args.verify_ssl)
     service      = connect_service(args)
@@ -154,7 +158,6 @@ def main():
             for message in folder.mailpieces:
                 while processor.qsize() >= args.qpressure:
                     time.sleep(.3)
-
                 processor.submit(message)
         except KeyboardInterrupt as ki:
             log.info('Asking processor to exit')
